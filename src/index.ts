@@ -6,17 +6,18 @@ import cors from "cors";
 const port:number = 8000;
 const app:Express = express();
 
+//----------------------------------- Middlewares --------------------------------------------- //
 app.use(express.json());
 app.use(cors());
 
+
+//----------------------------------- Modules route Registery --------------------------------------------- //
+app.use('/api/users', userRouter);
 app.get('/health',(req: Request,res: Response):void => {
     res.status(201).json({
         data: 'test server is live'
     })
 })
-
-app.use('/api/users', userRouter);
-
 app.use((req: Request,res: Response) => {
     res.status(404).json("No route found")
 })
