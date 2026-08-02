@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { prisma } from "../../lib/prisma.js";
 
 export class UserController {
     static async register(req: Request, res: Response): Promise<Response> {
@@ -11,14 +12,12 @@ export class UserController {
     }
 
     static async findUser(req: Request, res: Response): Promise<Response> {
-        const id = req.params.id;
+        const user = await prisma.user.findUnique({
+            where: {email: 'ahmed.ali@example.com'}
+        });
 
         return res.status(201).json({
-            status: "success",
-            data: {
-                id: id,
-                name: "Abdalrhman",
-            },
-        });
+            data: user
+        })
     }
 }
