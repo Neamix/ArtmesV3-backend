@@ -3,5 +3,3 @@ import { UserController } from "./user.controller.js";
 
 export const userRouter = Router();
 
-userRouter.get("/me", UserController.register);
-userRouter.get("/user/:id", UserController.findUser);
