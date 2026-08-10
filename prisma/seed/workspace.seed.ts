@@ -22,5 +22,4 @@ export async function seedWorkspaces() {
         },
     });
 
-    console.log(`Seeded workspace: ${workspace.name}.`);
 }

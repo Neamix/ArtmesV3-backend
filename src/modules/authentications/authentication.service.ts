@@ -1,8 +1,22 @@
 import { Prisma } from "../../generated/prisma/client.js";
-import type { UserCreateInput, UserModel } from "../../generated/prisma/models.js";
+import type { UserModel } from "../../generated/prisma/models.js";
 import { hashPassword, verifyPassword } from "../../utilities/hash.js";
 import { generateToken } from "../../utilities/jwt.js";
+import { createErrorResponse } from "../../utilities/createErrorResponse.js";
+import userResource from "../users/user.resource.js";
 import { UserService } from "../users/user.service.js";
+import type { LoginInput, RegisterInput } from "../users/user.validation.js";
+
+const DUMMY_PASSWORD_HASH = "$2b$10$INQiuupT1.a4MYLS5T7EG.xGbo0t73YE6aCNDzwwN5S4BBlaftKV";
+
+function invalidCredentialsResponse() {
+    return {
+        ...createErrorResponse({
+            email: "Wrong user credentials",
+        }),
+        code: 401,
+    };
+}
 
 export class AuthenticationService {
     private readonly userService: UserService;
@@ -11,67 +25,65 @@ export class AuthenticationService {
         this.userService = new UserService();
     }
 
-    async login (userData: UserCreateInput) {
-        const user:UserModel | null = await this.userService.findUserByEmail(userData.email);
-        if (!user) {
-            return {
-                'status': false,
-                'message': "Wrong user credentials",
-            }
+    async login(userData: LoginInput) {
+        const email = userData.email.trim().toLowerCase();
+        const user: UserModel | null = await this.userService.findUserByEmail(email);
+        const passwordMatching = await verifyPassword(
+            userData.password,
+            user?.password ?? DUMMY_PASSWORD_HASH,
+        );
+
+        if (!user || !passwordMatching) {
+            return invalidCredentialsResponse();
         }
 
-        const passwordMatching = await verifyPassword(userData.password,user.password);
-        if (!passwordMatching) {
-            return {
-                'status': false,
-                'message': "Wrong user credentials",
-            }
-        }
-
-        const access_token = generateToken(user.id);
+        const accessToken = generateToken(user.id);
 
         return {
-            'status': true,
-            'access_token': access_token,
-        }
+            status: true as const,
+            code: 200,
+            payload: {
+                user: userResource(user),
+                access_token: accessToken,
+            },
+        };
     }
 
-    async register (userData: UserCreateInput) {
+    async register(userData: RegisterInput) {
         try {
             const userRegister = await this.userService.createUser({
                 ...userData,
-                password: await hashPassword(userData.password)
+                email: userData.email.trim().toLowerCase(),
+                password: await hashPassword(userData.password),
             });
-            
+
             const token = generateToken(userRegister.id);
 
             return {
-                'status': true,
-                'code': 200,
-                'payload': {
-                    'user': {
-                        name: userRegister.name,
-                        avatar: userRegister.avatar
-                    },
-                    'token': token
-                }
-            }
-        } catch (error: any) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code == "P2002") {
+                status: true as const,
+                code: 201,
+                payload: {
+                    user: userResource(userRegister),
+                    access_token: token,
+                },
+            };
+        } catch (error: unknown) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
                 return {
-                    'status': false,
-                    'code': 409,
-                    'error': 'This email already has been used before'
-                }
+                    ...createErrorResponse({
+                        root: "Registration could not be completed",
+                    }),
+                    code: 409,
+                };
             }
 
             return {
-                'status': false,
-                'code': 500,
-                'error': "We got an error during register and our team working on it"
-            }
+                ...createErrorResponse({
+                    root: "Registration could not be completed",
+                }),
+                code: 500,
+            };
         }
-
     }
 
 
