@@ -5,7 +5,7 @@ import { generateToken } from "../../utilities/jwt.js";
 import { createErrorResponse } from "../../utilities/createErrorResponse.js";
 import userResource from "../users/user.resource.js";
 import { UserService } from "../users/user.service.js";
-import type { LoginInput, RegisterInput } from "../users/user.validation.js";
+import type { ForgetInput, LoginInput, RegisterInput } from "./authentication.validation.js";
 
 const DUMMY_PASSWORD_HASH = "$2b$10$INQiuupT1.a4MYLS5T7EG.xGbo0t73YE6aCNDzwwN5S4BBlaftKV";
 
@@ -86,6 +86,14 @@ export class AuthenticationService {
         }
     }
 
+    async forgetPassword(_forgetData: ForgetInput) {
+        return {
+            ...createErrorResponse({
+                root: "Password reset is not implemented yet",
+            }),
+            code: 501,
+        };
+    }
 
     async refreshToken () {
 
