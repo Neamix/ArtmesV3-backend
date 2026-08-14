@@ -6,9 +6,11 @@ import cors from "cors";
 import authRoutes from './modules/authentications/authentication.routes.js';
 import multer from 'multer';
 import { validateJwtConfiguration } from './utilities/jwt.js';
+import { fileURLToPath } from 'node:url';
 
 const port:number = Number(process.env.SERVER_PORT)  || 8000;
 const app:Express = express();
+const publicDirectory = fileURLToPath(new URL('../public', import.meta.url));
 const allowedOrigins = process.env.CORS_ORIGINS
     ?.split(",")
     .map((origin) => origin.trim())
@@ -23,6 +25,7 @@ validateJwtConfiguration();
 //----------------------------------- Middlewares --------------------------------------------- //
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(publicDirectory));
 app.use(cors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
 }));
