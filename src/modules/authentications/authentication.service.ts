@@ -6,26 +6,30 @@ import { createErrorResponse } from "../../utilities/createErrorResponse.js";
 import userResource from "../users/user.resource.js";
 import { UserService } from "../users/user.service.js";
 import type { ForgetInput, LoginInput, RegisterInput } from "./authentication.validation.js";
-import { scrypt, randomBytes } from "node:crypto";
-import { promisify } from "node:util";const DUMMY_PASSWORD_HASH = "$2b$10$INQiuupT1.a4MYLS5T7EG.xGbo0t73YE6aCNDzwwN5S4BBlaftKV";
+import tokenGenerator from "../../utilities/tokenGenerator.js";
+import { AuthenticationRepository } from "./authentication.repository.js";
+import { email } from "zod";
+import redisClient from "../../lib/redisClient.js";
 
 
 export class AuthenticationService {
-    private readonly userService: UserService;
-
-    constructor() {
-        this.userService = new UserService();
-    }
+    private readonly userService: UserService = new UserService;
+    private readonly authenticationRepository: AuthenticationRepository = new AuthenticationRepository
 
     async login(userData: LoginInput) {
         const email = userData.email.trim().toLowerCase();
         const user: UserModel | null = await this.userService.findUserByEmail(email);
-        const passwordMatching = await verifyPassword(
-            userData.password,
-            user?.password ?? DUMMY_PASSWORD_HASH,
-        );
+        if (!user) {
+            return {
+                ...createErrorResponse({
+                    root: "Registration could not be completed",
+                }),
+                code: 422,
+            };
+        }
 
-        if (!user || !passwordMatching) {
+        const passwordMatching = await verifyPassword(userData.password,user.password);
+        if (!passwordMatching) {
             return {
                 ...createErrorResponse({
                     root: "Registration could not be completed",
@@ -83,9 +87,28 @@ export class AuthenticationService {
         }
     }
 
-    async forgetPassword(_forgetData: ForgetInput) {
-        const token = crypto.randomByte(32).
+    async forgetPassword(forgetData: ForgetInput) {
+        const user = await this.userService.findUserByEmail(forgetData.email);
+        if (!user) {
+            return {
+                ...createErrorResponse({
+                    root: "Can't find this user"
+                }),
+                code: 422,
+            };
+        }
+
+        const passwordResestToken = await tokenGenerator();
+        await redisClient.set(`password_reset:${passwordResestToken}`,forgetData.email,{EX: 10 * 60});
+
+        return {
+            status: true as const,
+            code: 200,
+            message: "Password reset request created",
+        };
     }
+
+    
 
     async refreshToken () {
 

@@ -7,6 +7,7 @@ import authRoutes from './modules/authentications/authentication.routes.js';
 import multer from 'multer';
 import { validateJwtConfiguration } from './utilities/jwt.js';
 import { fileURLToPath } from 'node:url';
+import redisClient from './lib/redisClient.js';
 
 const port:number = Number(process.env.SERVER_PORT)  || 8000;
 const app:Express = express();
@@ -35,7 +36,7 @@ app.use('/api/v1',authRoutes);
 app.use('/api/v1/users', userRouter);
 app.get('/health',(req: Request,res: Response):void => {
     res.status(201).json({
-        data: 'test server is live'
+        data: 'ping,ping,ping'
     })
 })
 app.use((req: Request,res: Response) => {
@@ -68,7 +69,10 @@ const server = app.listen(port);
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
     process.on(signal, (): void => {
         server.close(() => {
-            void prisma.$disconnect().then(() => process.exit(0));
+            void Promise.all([
+                prisma.$disconnect(),
+                redisClient.quit(),
+            ]).then(() => process.exit(0));
         });
     });
 }

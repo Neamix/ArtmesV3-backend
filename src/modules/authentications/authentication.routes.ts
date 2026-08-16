@@ -8,6 +8,7 @@ import { limiter } from "../../utilities/createAuthLimiter.js";
 import nodemailer from "nodemailer";
 import { renderWelcomeEmail } from "../../emails/renderWelcomeEmail.js";
 import { fileURLToPath } from "node:url";
+import redisClient from "../../lib/redisClient.js";
 
 const authRoutes = Router();
 const authController = new AuthenticationController(new AuthenticationService);
@@ -30,54 +31,18 @@ authRoutes.post(
 );
 
 
-authRoutes.get(
-    "/test-email",
-    async (_req: Request, res: Response) => {
-        const transporter = nodemailer.createTransport({
-            host: "sandbox.smtp.mailtrap.io",
-            port: 587,
-            connectionTimeout: 10_000,
-            greetingTimeout: 10_000,
-            socketTimeout: 15_000,
-            auth: {
-                user: "9bb275809f4be9",
-                pass: "9988feeedd6228",
-            },
-        });
+authRoutes.get("/test-redis", async (req: Request, res: Response) => {
+    await redisClient.mSet([
+        ['user:views:1','1'],
+        ['user:views:2','5'],
+        ['user:views:3','6']
+    ]);
 
-        const html = await renderWelcomeEmail({
-            name: "Abdalrhman",
-        });
+    await redisClient.incrBy('user:views:1',10);
+    
+    return res.send({
+        'user': await redisClient.get('user:1')
+    });
+});
 
-        const info = await transporter.sendMail({
-            from: "Artmes",
-            subject: "Welcome to Artmes — your workspace is ready",
-            html,
-            attachments: [
-                {
-                    filename: "artmes-logo.png",
-                    path: logoPath,
-                    cid: "artmes-logo@artmes",
-                    contentDisposition: "inline",
-                },
-            ],
-            text: [
-                "Welcome to Artmes, Abdalrhman.",
-                "",
-                "Your workspace is ready. Start by creating your pipeline, adding your first leads, and inviting your team.",
-                "",
-                "Open your workspace and start moving deals forward.",
-                "",
-                "Need help? Contact support@artmes.com.",
-            ].join("\n"),
-            to: "abdalrhmanhussin44@gmail.com",
-        });
-
-        return res.status(200).json({
-            status: true,
-            message: "Test email sent successfully",
-            messageId: info.messageId,
-        });
-    },
-);
 export default authRoutes;
