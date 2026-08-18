@@ -10,6 +10,7 @@ import tokenGenerator from "../../utilities/tokenGenerator.js";
 import { AuthenticationRepository } from "./authentication.repository.js";
 import { email } from "zod";
 import redisClient from "../../lib/redisClient.js";
+import emailQueue from "../../jobs/queues/email/email.queue.js";
 
 
 export class AuthenticationService {
@@ -100,6 +101,13 @@ export class AuthenticationService {
 
         const passwordResestToken = await tokenGenerator();
         await redisClient.set(`password_reset:${passwordResestToken}`,forgetData.email,{EX: 10 * 60});
+        await emailQueue.add("forget-password-email",{
+            to: user.email,
+            subject: "Forget Password",
+            data: {
+                token: "passwordResestToken"
+            }
+        });
 
         return {
             status: true as const,
