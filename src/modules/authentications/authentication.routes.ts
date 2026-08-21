@@ -5,8 +5,6 @@ import { validateRequest } from "../../utilities/validateRequest.js";
 import { loginSchema, registerSchema } from "./authentication.validation.js";
 import { AuthenticationService } from "./authentication.service.js";
 import { limiter } from "../../utilities/createAuthLimiter.js";
-import nodemailer from "nodemailer";
-import { renderWelcomeEmail } from "../../emails/renderWelcomeEmail.js";
 import { fileURLToPath } from "node:url";
 import redisClient from "../../lib/redisClient.js";
 
@@ -29,7 +27,6 @@ authRoutes.post(
     validateRequest(loginSchema),
     authController.login,
 );
-
 
 authRoutes.get("/test-redis", async (req: Request, res: Response) => {
     await redisClient.mSet([

@@ -1,0 +1,1 @@
+import workerEmail from "./queues/email/worker.queue.js";

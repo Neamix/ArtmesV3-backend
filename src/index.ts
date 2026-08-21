@@ -8,6 +8,8 @@ import multer from 'multer';
 import { validateJwtConfiguration } from './utilities/jwt.js';
 import { fileURLToPath } from 'node:url';
 import redisClient from './lib/redisClient.js';
+import { toNodeHandler } from 'better-auth/node';
+import { auth } from './lib/auth.js';
 
 const port:number = Number(process.env.SERVER_PORT)  || 8000;
 const app:Express = express();
@@ -24,12 +26,14 @@ if (process.env.NODE_ENV === "production" && allowedOrigins.length === 0) {
 validateJwtConfiguration();
 
 //----------------------------------- Middlewares --------------------------------------------- //
+app.use(cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    credentials: true,
+}));
+app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicDirectory));
-app.use(cors({
-    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
-}));
 
 //----------------------------------- Modules route Registery --------------------------------------------- //
 app.use('/api/v1',authRoutes);

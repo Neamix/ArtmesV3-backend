@@ -8,7 +8,6 @@ if (!connectionString) {
     throw new Error("DATABASE_URL is not set. Check your .env file.");
 }
 
-// Prisma 7 requires a driver adapter for SQL providers.
 const adapter = new PrismaPg({ connectionString });
 
 export const prisma = new PrismaClient({ adapter });
