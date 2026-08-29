@@ -4,6 +4,13 @@ import { UserService } from "./user.service.js";
 const userService = new UserService();
 
 export class UserController {
+    static async changeAvatar(req: Request, res: Response): Promise<Response> {
+        return res.status(200).json({
+            status: true,
+            message: "Avatar uploaded successfully",
+        });
+    }
+
     static async register(req: Request, res: Response): Promise<Response> {
         return res.status(201).json({
             status: "success",

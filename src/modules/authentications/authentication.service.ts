@@ -11,11 +11,13 @@ import { AuthenticationRepository } from "./authentication.repository.js";
 import { email } from "zod";
 import redisClient from "../../lib/redisClient.js";
 import emailQueue from "../../jobs/queues/email/email.queue.js";
+import { fromNodeHeaders } from "better-auth/node";
 
 
 export class AuthenticationService {
     private readonly userService: UserService = new UserService;
     private readonly authenticationRepository: AuthenticationRepository = new AuthenticationRepository
+
 
     async login(userData: LoginInput) {
         const email = userData.email.trim().toLowerCase();

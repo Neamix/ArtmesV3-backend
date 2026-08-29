@@ -29,6 +29,16 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true
+  },
+
+  emailVerification: {
+    expiresIn: 60 * 60 * 10,
+    autoSignInAfterVerification: true,
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({user,url,token}) => {
+      
+    }
   },
 
   trustedOrigins,
