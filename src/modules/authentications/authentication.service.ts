@@ -18,7 +18,6 @@ export class AuthenticationService {
     private readonly userService: UserService = new UserService;
     private readonly authenticationRepository: AuthenticationRepository = new AuthenticationRepository
 
-
     async login(userData: LoginInput) {
         const email = userData.email.trim().toLowerCase();
         const user: UserModel | null = await this.userService.findUserByEmail(email);
@@ -53,41 +52,13 @@ export class AuthenticationService {
         };
     }
 
-    async register(userData: RegisterInput) {
-        try {
-            const userRegister = await this.userService.createUser({
-                ...userData,
-                email: userData.email.trim().toLowerCase(),
-                password: await hashPassword(userData.password),
-            });
-
-            const token = generateToken(userRegister.id);
-
-            return {
-                status: true as const,
-                code: 201,
-                payload: {
-                    user: userResource(userRegister),
-                    access_token: token,
-                },
-            };
-        } catch (error: unknown) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-                return {
-                    ...createErrorResponse({
-                        root: "Registration could not be completed",
-                    }),
-                    code: 409,
-                };
-            }
-
-            return {
-                ...createErrorResponse({
-                    root: "Registration could not be completed",
-                }),
-                code: 500,
-            };
+    async checkDuplicateEmail(userData: RegisterInput) {
+        const checkUserByEmail = await this.userService.findUserByEmail(userData.email);
+        if (checkUserByEmail) {
+            return false
         }
+
+        return true;
     }
 
     async forgetPassword(forgetData: ForgetInput) {

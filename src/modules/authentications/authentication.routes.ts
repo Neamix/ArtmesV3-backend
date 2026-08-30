@@ -14,6 +14,34 @@ const logoPath = fileURLToPath(
     new URL("../../../public/Logos/logo.png", import.meta.url),
 );
 
+// authRoutes.post(
+//     "/register",
+//     limiter(5),
+//     validateRequest(registerSchema),
+//     authController.register,
+// );
+
+// authRoutes.post(
+//     "/login",
+//     limiter(10),
+//     validateRequest(loginSchema),
+//     authController.login,
+// );
+
+// authRoutes.get("/test-redis", async (req: Request, res: Response) => {
+//     await redisClient.mSet([
+//         ['user:views:1','1'],
+//         ['user:views:2','5'],
+//         ['user:views:3','6']
+//     ]);
+
+//     await redisClient.incrBy('user:views:1',10);
+    
+//     return res.send({
+//         'user': await redisClient.get('user:1')
+//     });
+// });
+
 authRoutes.post(
     "/register",
     limiter(5),
@@ -28,18 +56,8 @@ authRoutes.post(
     authController.login,
 );
 
-authRoutes.get("/test-redis", async (req: Request, res: Response) => {
-    await redisClient.mSet([
-        ['user:views:1','1'],
-        ['user:views:2','5'],
-        ['user:views:3','6']
-    ]);
+authRoutes.post("/logout", authController.logout);
 
-    await redisClient.incrBy('user:views:1',10);
-    
-    return res.send({
-        'user': await redisClient.get('user:1')
-    });
-});
+authRoutes.get("/me", authController.me);
 
 export default authRoutes;
