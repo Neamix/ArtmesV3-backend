@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma.js";
+import { sendEmail } from "./mail.js";
 
 const configuredOrigins = [
   ...(process.env.CORS_ORIGINS?.split(",") ?? []),
@@ -9,14 +10,6 @@ const configuredOrigins = [
   .filter((origin): origin is string => Boolean(origin?.trim()))
   .map((origin) => origin.trim());
 
-const trustedOrigins = [
-  ...new Set([
-    ...configuredOrigins,
-    ...(process.env.NODE_ENV === "production"
-      ? []
-      : ["http://localhost:3000"]),
-  ]),
-];
 
 export const auth = betterAuth({
   appName: "Artmes",
@@ -36,12 +29,17 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 10,
     autoSignInAfterVerification: true,
     sendOnSignUp: true,
-    sendVerificationEmail: async ({user,url,token}) => {
-      
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your Artmes email address",
+        html: `<p>Confirm your email address to finish setting up your Artmes account.</p>
+<p><a href="${url}">Verify email</a></p>
+<p>This link expires in 10 hours. If you didn't create an account, you can ignore this email.</p>`,
+      });
     }
   },
 
-  trustedOrigins,
 
   user: {
     modelName: "User",

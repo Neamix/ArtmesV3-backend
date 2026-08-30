@@ -118,7 +118,9 @@ export class AuthenticationService {
         };
     }
 
-    
+    async sendVerificationEmail(userData: RegisterInput) {
+        
+    }
 
     async refreshToken () {
 
