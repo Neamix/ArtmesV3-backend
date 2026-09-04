@@ -37,6 +37,10 @@ export const forgetSchema = z.object({
     email: emailField
 })
 
+export const resendVerificationSchema = z.object({
+    email: emailField
+})
+
 export const resetSchema = z.object({
     token: z
         .string({ error: "Reset token is required" })
@@ -55,3 +59,4 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgetInput = z.infer<typeof forgetSchema>
 export type ResetInput = z.infer<typeof resetSchema>
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>

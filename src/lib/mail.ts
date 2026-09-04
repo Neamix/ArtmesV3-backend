@@ -1,4 +1,8 @@
+// mail.ts reads SMTP settings at module scope, so the env must already be
+// loaded no matter which entrypoint (server or worker) imports it first.
+import "dotenv/config";
 import nodemailer from "nodemailer";
+import type Mail from "nodemailer/lib/mailer/index.js";
 
 const port = Number(process.env.SMTP_PORT) || 587;
 const from = process.env.EMAIL_FROM;
@@ -22,18 +26,21 @@ export async function sendEmail({
     from,
     to,
     subject,
-    html
+    html,
+    attachments
 }: {
     from?: string,
     to: string,
     subject: string,
-    html: string
+    html: string,
+    attachments?: Mail.Attachment[]
 }) {
     await transporter.sendMail({
         ...(from ? { from } : {}),
         to,
         subject,
-        html
+        html,
+        ...(attachments ? { attachments } : {})
     });
 }
 

@@ -1,6 +1,6 @@
 import { createErrorResponse } from "../../utilities/createErrorResponse.js";
 import { UserService } from "../users/user.service.js";
-import type { ForgetInput, LoginInput, RegisterInput, ResetInput } from "./authentication.validation.js";
+import type { ForgetInput, LoginInput, RegisterInput, ResendVerificationInput, ResetInput } from "./authentication.validation.js";
 import { auth } from "../../lib/auth.js";
 import type { Response } from "express";
 import { isAPIError } from "better-auth/api";
@@ -94,6 +94,33 @@ export class AuthenticationService {
             code: 200,
             message: response.message,
         };
+    }
+
+    async resendVerification(resendData: ResendVerificationInput) {
+        try {
+            await auth.api.sendVerificationEmail({
+                body: {
+                    email: resendData.email,
+                },
+            });
+
+            return {
+                status: true as const,
+                code: 200,
+                message: "If that address needs verifying, a new link is on its way",
+            };
+        } catch (error) {
+            if (isAPIError(error)) {
+                return {
+                    ...createErrorResponse({
+                        root: error.message,
+                    }),
+                    code: error.statusCode,
+                };
+            }
+
+            throw error;
+        }
     }
 
     async resetPassword(resetData: ResetInput) {

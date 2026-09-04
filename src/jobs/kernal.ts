@@ -2,7 +2,7 @@ import workerEmail from "./queues/email/worker.queue.js";
 import redisClient from "../lib/redisClient.js";
 
 const workers = [
-    workerEmail
+  workerEmail
 ]
 
 let shuttingDown = false;
@@ -36,4 +36,3 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
 }
 
 await Promise.all(workers.map((worker) => worker.waitUntilReady()));
-console.log(`Workers started: ${workers.length}`);

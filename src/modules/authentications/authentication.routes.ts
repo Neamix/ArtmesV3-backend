@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AuthenticationController } from "./authentication.controller.js";
 import { validateRequest } from "../../utilities/validateRequest.js";
-import { forgetSchema, loginSchema, registerSchema, resetSchema } from "./authentication.validation.js";
+import { forgetSchema, loginSchema, registerSchema, resendVerificationSchema, resetSchema } from "./authentication.validation.js";
 import { AuthenticationService } from "./authentication.service.js";
 import { limiter } from "../../utilities/createAuthLimiter.js";
 
@@ -28,6 +28,13 @@ authRoutes.post(
     limiter(10),
     validateRequest(forgetSchema),
     authController.forgetPassword,
+);
+
+authRoutes.post(
+    "/resend-verification",
+    limiter(5),
+    validateRequest(resendVerificationSchema),
+    authController.resendVerification,
 );
 
 authRoutes.post(

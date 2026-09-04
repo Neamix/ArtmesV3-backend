@@ -14,19 +14,22 @@ import {
 } from "@react-email/components";
 import type { CSSProperties } from "react";
 
-interface VerificationEmailProps {
-    verificationUrl: string;
+interface PasswordChangedEmailProps {
     name: string;
     logoUrl: string;
     supportEmail: string;
+    /** Where a user who did not do this can start a fresh reset. */
+    recoverUrl: string;
+    changedAt: string;
 }
 
-export function VerificationEmail({
-    verificationUrl,
+export function PasswordChangedEmail({
     name,
     logoUrl,
     supportEmail,
-}: VerificationEmailProps) {
+    recoverUrl,
+    changedAt,
+}: PasswordChangedEmailProps) {
     const currentYear = new Date().getFullYear();
 
     return (
@@ -43,7 +46,7 @@ export function VerificationEmail({
                 `}</style>
             </Head>
             <Preview>
-                Confirm your email address to activate your Artmes account.
+                Your Artmes password was changed.
             </Preview>
             <Body style={bodyStyle}>
                 <Container className="email-container" style={containerStyle}>
@@ -56,17 +59,14 @@ export function VerificationEmail({
                                 alt="Artmes"
                                 style={logoStyle}
                             />
-                            <Text style={eyebrowStyle}>One step left</Text>
+                            <Text style={eyebrowStyle}>Security update</Text>
                             <Heading className="email-heading" style={headingStyle}>
-                                Confirm your email, {name}.
+                                Your password was changed.
                             </Heading>
                             <Text style={subtitleStyle}>
-                                We just need to know this address belongs to you before your
-                                Artmes account goes live.
+                                The password for your Artmes account was reset on {changedAt}.
+                                You can sign in with it right away.
                             </Text>
-                            <Button href={verificationUrl} style={buttonStyle}>
-                                Verify my email
-                            </Button>
                         </Section>
 
                         <Section className="email-padding" style={contentStyle}>
@@ -74,36 +74,31 @@ export function VerificationEmail({
                                 Hi {name},
                             </Text>
                             <Text style={bodyCopyStyle}>
-                                Thanks for signing up. Tap the button above to confirm your
-                                address — you will be signed in and taken straight to your
-                                workspace.
+                                This is a confirmation that your password was successfully
+                                changed. No action is needed if this was you.
                             </Text>
 
-                            <Text style={fallbackHeadingStyle}>
-                                Button not working?
-                            </Text>
-                            <Text style={fallbackCopyStyle}>
-                                Copy and paste this link into your browser:
-                            </Text>
-                            <Text style={fallbackLinkWrapStyle}>
-                                <Link href={verificationUrl} style={fallbackLinkStyle}>
-                                    {verificationUrl}
-                                </Link>
-                            </Text>
+                            <Section style={noticeStyle}>
+                                <Text style={noticeCopyStyle}>
+                                    For your security, every other session was signed out. You
+                                    will need to sign in again on your other devices.
+                                </Text>
+                            </Section>
 
                             <Hr style={dividerStyle} />
 
                             <Section style={helpStyle}>
-                                <Text style={helpHeadingStyle}>Did not sign up?</Text>
+                                <Text style={helpHeadingStyle}>Was this not you?</Text>
                                 <Text style={helpCopyStyle}>
-                                    You can safely ignore this email — the account stays
-                                    unverified and cannot be signed in to. Questions? Reach
-                                    us at{" "}
+                                    Reset your password again right away, then contact us at{" "}
                                     <Link href={`mailto:${supportEmail}`} style={linkStyle}>
                                         {supportEmail}
                                     </Link>
-                                    .
+                                    {" "}so we can help secure your account.
                                 </Text>
+                                <Button href={recoverUrl} style={secondaryButtonStyle}>
+                                    Secure my account
+                                </Button>
                             </Section>
                         </Section>
                     </Section>
@@ -113,8 +108,8 @@ export function VerificationEmail({
                             Artmes · One pipeline for every lead.
                         </Text>
                         <Text style={footerCopyStyle}>
-                            You received this email because someone used this address to sign
-                            up for Artmes.
+                            You received this email because the password for the Artmes
+                            account on this address was changed.
                         </Text>
                         <Text style={copyrightStyle}>
                             © {currentYear} Artmes, Inc. All rights reserved.
@@ -179,24 +174,11 @@ const headingStyle: CSSProperties = {
 };
 
 const subtitleStyle: CSSProperties = {
-    margin: "0 0 28px",
+    margin: 0,
     fontFamily: "Helvetica, Arial, sans-serif",
     fontSize: "15px",
     lineHeight: "1.55",
     color: "#B7B4AC",
-};
-
-const buttonStyle: CSSProperties = {
-    display: "inline-block",
-    padding: "13px 22px",
-    backgroundColor: "#2176FF",
-    borderRadius: "8px",
-    fontFamily: "Helvetica, Arial, sans-serif",
-    fontSize: "14px",
-    fontWeight: 700,
-    lineHeight: "20px",
-    textDecoration: "none",
-    color: "#fff",
 };
 
 const contentStyle: CSSProperties = {
@@ -213,40 +195,24 @@ const introStyle: CSSProperties = {
 };
 
 const bodyCopyStyle: CSSProperties = {
-    margin: "0 0 30px",
+    margin: "0 0 24px",
     fontSize: "15px",
     lineHeight: "1.65",
     color: "#3B3F49",
 };
 
-const fallbackHeadingStyle: CSSProperties = {
-    margin: "0 0 6px",
-    fontSize: "14px",
-    fontWeight: 700,
-    lineHeight: "1.5",
-    color: "#20232B",
+const noticeStyle: CSSProperties = {
+    padding: "14px 18px",
+    margin: 0,
+    backgroundColor: "#E8F1FF",
+    borderRadius: "10px",
 };
 
-const fallbackCopyStyle: CSSProperties = {
-    margin: "0 0 10px",
+const noticeCopyStyle: CSSProperties = {
+    margin: 0,
     fontSize: "13px",
     lineHeight: "1.55",
-    color: "#626774",
-};
-
-const fallbackLinkWrapStyle: CSSProperties = {
-    margin: 0,
-    padding: "12px 14px",
-    backgroundColor: "#F6F4EE",
-    borderRadius: "8px",
-    fontSize: "12px",
-    lineHeight: "1.5",
-    wordBreak: "break-all",
-};
-
-const fallbackLinkStyle: CSSProperties = {
-    color: "#2176FF",
-    textDecoration: "none",
+    color: "#005BC8",
 };
 
 const dividerStyle: CSSProperties = {
@@ -268,10 +234,23 @@ const helpHeadingStyle: CSSProperties = {
 };
 
 const helpCopyStyle: CSSProperties = {
-    margin: 0,
+    margin: "0 0 16px",
     fontSize: "13px",
     lineHeight: "1.55",
     color: "#626774",
+};
+
+const secondaryButtonStyle: CSSProperties = {
+    display: "inline-block",
+    padding: "11px 18px",
+    backgroundColor: "#20232B",
+    borderRadius: "8px",
+    fontFamily: "Helvetica, Arial, sans-serif",
+    fontSize: "13px",
+    fontWeight: 700,
+    lineHeight: "18px",
+    textDecoration: "none",
+    color: "#fff",
 };
 
 const linkStyle: CSSProperties = {

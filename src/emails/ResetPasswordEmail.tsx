@@ -14,20 +14,23 @@ import {
 } from "@react-email/components";
 import type { CSSProperties } from "react";
 
-interface VerificationEmailProps {
-    verificationUrl: string;
+interface ResetPasswordEmailProps {
+    resetUrl: string;
     name: string;
     logoUrl: string;
     supportEmail: string;
+    expiresInHours: number;
 }
 
-export function VerificationEmail({
-    verificationUrl,
+export function ResetPasswordEmail({
+    resetUrl,
     name,
     logoUrl,
     supportEmail,
-}: VerificationEmailProps) {
+    expiresInHours,
+}: ResetPasswordEmailProps) {
     const currentYear = new Date().getFullYear();
+    const expiryLabel = expiresInHours === 1 ? "1 hour" : `${expiresInHours} hours`;
 
     return (
         <Html lang="en">
@@ -43,7 +46,7 @@ export function VerificationEmail({
                 `}</style>
             </Head>
             <Preview>
-                Confirm your email address to activate your Artmes account.
+                Reset your Artmes password — this link expires soon.
             </Preview>
             <Body style={bodyStyle}>
                 <Container className="email-container" style={containerStyle}>
@@ -56,16 +59,16 @@ export function VerificationEmail({
                                 alt="Artmes"
                                 style={logoStyle}
                             />
-                            <Text style={eyebrowStyle}>One step left</Text>
+                            <Text style={eyebrowStyle}>Password reset</Text>
                             <Heading className="email-heading" style={headingStyle}>
-                                Confirm your email, {name}.
+                                Choose a new password.
                             </Heading>
                             <Text style={subtitleStyle}>
-                                We just need to know this address belongs to you before your
-                                Artmes account goes live.
+                                We received a request to reset the password for your Artmes
+                                account. Use the button below to set a new one.
                             </Text>
-                            <Button href={verificationUrl} style={buttonStyle}>
-                                Verify my email
+                            <Button href={resetUrl} style={buttonStyle}>
+                                Reset my password
                             </Button>
                         </Section>
 
@@ -74,10 +77,16 @@ export function VerificationEmail({
                                 Hi {name},
                             </Text>
                             <Text style={bodyCopyStyle}>
-                                Thanks for signing up. Tap the button above to confirm your
-                                address — you will be signed in and taken straight to your
-                                workspace.
+                                Your current password still works until you finish this step,
+                                so nothing changes if you decide not to continue.
                             </Text>
+
+                            <Section style={noticeStyle}>
+                                <Text style={noticeCopyStyle}>
+                                    This link expires in <strong>{expiryLabel}</strong> and can
+                                    only be used once.
+                                </Text>
+                            </Section>
 
                             <Text style={fallbackHeadingStyle}>
                                 Button not working?
@@ -86,19 +95,19 @@ export function VerificationEmail({
                                 Copy and paste this link into your browser:
                             </Text>
                             <Text style={fallbackLinkWrapStyle}>
-                                <Link href={verificationUrl} style={fallbackLinkStyle}>
-                                    {verificationUrl}
+                                <Link href={resetUrl} style={fallbackLinkStyle}>
+                                    {resetUrl}
                                 </Link>
                             </Text>
 
                             <Hr style={dividerStyle} />
 
                             <Section style={helpStyle}>
-                                <Text style={helpHeadingStyle}>Did not sign up?</Text>
+                                <Text style={helpHeadingStyle}>Did not request this?</Text>
                                 <Text style={helpCopyStyle}>
-                                    You can safely ignore this email — the account stays
-                                    unverified and cannot be signed in to. Questions? Reach
-                                    us at{" "}
+                                    You can safely ignore this email and your password will
+                                    stay as it is. If you think someone else is trying to get
+                                    into your account, contact us at{" "}
                                     <Link href={`mailto:${supportEmail}`} style={linkStyle}>
                                         {supportEmail}
                                     </Link>
@@ -113,8 +122,8 @@ export function VerificationEmail({
                             Artmes · One pipeline for every lead.
                         </Text>
                         <Text style={footerCopyStyle}>
-                            You received this email because someone used this address to sign
-                            up for Artmes.
+                            You received this email because a password reset was requested for
+                            this address.
                         </Text>
                         <Text style={copyrightStyle}>
                             © {currentYear} Artmes, Inc. All rights reserved.
@@ -213,10 +222,24 @@ const introStyle: CSSProperties = {
 };
 
 const bodyCopyStyle: CSSProperties = {
-    margin: "0 0 30px",
+    margin: "0 0 24px",
     fontSize: "15px",
     lineHeight: "1.65",
     color: "#3B3F49",
+};
+
+const noticeStyle: CSSProperties = {
+    padding: "14px 18px",
+    margin: "0 0 30px",
+    backgroundColor: "#E8F1FF",
+    borderRadius: "10px",
+};
+
+const noticeCopyStyle: CSSProperties = {
+    margin: 0,
+    fontSize: "13px",
+    lineHeight: "1.55",
+    color: "#005BC8",
 };
 
 const fallbackHeadingStyle: CSSProperties = {

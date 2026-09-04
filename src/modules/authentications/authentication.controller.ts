@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { AuthenticationService } from "./authentication.service.js";
-import type { ForgetInput, LoginInput, RegisterInput, ResetInput } from "./authentication.validation.js";
+import type { ForgetInput, LoginInput, RegisterInput, ResendVerificationInput, ResetInput } from "./authentication.validation.js";
 import { fromNodeHeaders } from "better-auth/node";
 
 export class AuthenticationController {
@@ -11,7 +11,7 @@ export class AuthenticationController {
         const result = await this.authService.register({ name, email, password });
         
         if (!result.status) {
-            res.status(result.code).json(result);
+            return res.status(result.code).json(result);
         }
 
         return res.status(result.code).json({user: result.payload?.user,token: result.payload?.token});
@@ -20,6 +20,10 @@ export class AuthenticationController {
     login = async (req: Request, res: Response) => {
         const { email, password } = req.body as LoginInput;
         const result = await this.authService.login({email,password});
+
+        if (!result.status) {
+            return res.status(result.code).json(result);
+        }
 
         return res.status(result.code).json({user: result.payload?.user,token: result.payload?.token});
     }
@@ -40,6 +44,13 @@ export class AuthenticationController {
         return res.status(result.code).json(result);
     }
 
+    resendVerification = async (req: Request, res: Response) => {
+        const { email } = req.body as ResendVerificationInput;
+        const result = await this.authService.resendVerification({ email });
+
+        return res.status(result.code).json(result);
+    }
+
     resetPassword = async (req: Request, res: Response) => {
         const { token, password } = req.body as ResetInput;
         const result = await this.authService.resetPassword({ token, password });
@@ -52,8 +63,11 @@ export class AuthenticationController {
             fromNodeHeaders(req.headers),
         );
 
+        if (!result.status) {
+            return res.status(result.code).json(result);
+        }
+        
         this.authService.applyAuthHeaders(res, headers);
-
         return res.status(result.code).json({user: result.payload?.user});
     }
 }
