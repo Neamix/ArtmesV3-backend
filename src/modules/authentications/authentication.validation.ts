@@ -19,7 +19,9 @@ const registerPasswordField = z
     .string({ error: "Password is required" })
     .min(8, "Password must contain at least 8 characters")
     .max(30, "Password must not exceed 30 characters")
-    .regex(/[\p{P}\p{S}]/u, "Password must contain at least one special character")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
 
 export const registerSchema = z.object({
     name: z
@@ -35,6 +37,15 @@ export const forgetSchema = z.object({
     email: emailField
 })
 
+export const resetSchema = z.object({
+    token: z
+        .string({ error: "Reset token is required" })
+        .trim()
+        .min(1, "Reset token is required"),
+    password: registerPasswordField,
+})
+
+
 export const loginSchema = z.object({
     email: emailField,
     password: loginPasswordField,
@@ -43,3 +54,4 @@ export const loginSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgetInput = z.infer<typeof forgetSchema>
+export type ResetInput = z.infer<typeof resetSchema>

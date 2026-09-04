@@ -1,56 +1,59 @@
 import type { Request, Response } from "express";
 import { AuthenticationService } from "./authentication.service.js";
-import type { ForgetInput, LoginInput, RegisterInput } from "./authentication.validation.js";
+import type { ForgetInput, LoginInput, RegisterInput, ResetInput } from "./authentication.validation.js";
 import { fromNodeHeaders } from "better-auth/node";
-import { auth } from "../../lib/auth.js";
-import { sendAuthResponse } from "../../utilities/sendAuthResponse.js";
 
 export class AuthenticationController {
     constructor(private readonly authService: AuthenticationService) {}
 
     register = async (req: Request, res: Response) => {
         const { name, email, password } = req.body as RegisterInput;
+        const result = await this.authService.register({ name, email, password });
+        
+        if (!result.status) {
+            res.status(result.code).json(result);
+        }
 
-        const response = await auth.api.signUpEmail({
-            body: { name, email, password },
-            headers: fromNodeHeaders(req.headers),
-            asResponse: true,
-        });
-
-        return sendAuthResponse(res, response);
+        return res.status(result.code).json({user: result.payload?.user,token: result.payload?.token});
     }
 
     login = async (req: Request, res: Response) => {
         const { email, password } = req.body as LoginInput;
+        const result = await this.authService.login({email,password});
 
-        const response = await auth.api.signInEmail({
-            body: { email, password },
-            headers: fromNodeHeaders(req.headers),
-            asResponse: true,
-        });
-
-        return sendAuthResponse(res, response);
+        return res.status(result.code).json({user: result.payload?.user,token: result.payload?.token});
     }
 
     logout = async (req: Request, res: Response) => {
-        const response = await auth.api.signOut({
-            headers: fromNodeHeaders(req.headers),
-            asResponse: true,
-        });
+        const { headers, ...result } = await this.authService.logout(
+            fromNodeHeaders(req.headers),
+        );
 
-        return sendAuthResponse(res, response);
+
+        return res.status(result.code).json(result);
     }
 
     forgetPassword = async (req: Request, res: Response) => {
-        const result = await this.authService.forgetPassword(req.body as ForgetInput);
+        const { email } = req.body as ForgetInput;
+        const result = await this.authService.forgetPassword({email});
+        
+        return res.status(result.code).json(result);
+    }
+
+    resetPassword = async (req: Request, res: Response) => {
+        const { token, password } = req.body as ResetInput;
+        const result = await this.authService.resetPassword({ token, password });
+
         return res.status(result.code).json(result);
     }
 
     me = async (req: Request, res: Response) => {
-        const session = await auth.api.getSession({
-            headers: fromNodeHeaders(req.headers),
-        });
+        const { headers, ...result } = await this.authService.me(
+            fromNodeHeaders(req.headers),
+        );
 
-        return res.json(session);
+        this.authService.applyAuthHeaders(res, headers);
+
+        return res.status(result.code).json({user: result.payload?.user});
     }
 }

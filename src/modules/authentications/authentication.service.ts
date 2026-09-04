@@ -1,55 +1,76 @@
-import { Prisma } from "../../generated/prisma/client.js";
-import type { UserModel } from "../../generated/prisma/models.js";
-import { hashPassword, verifyPassword } from "../../utilities/hash.js";
-import { generateToken } from "../../utilities/jwt.js";
 import { createErrorResponse } from "../../utilities/createErrorResponse.js";
-import userResource from "../users/user.resource.js";
 import { UserService } from "../users/user.service.js";
-import type { ForgetInput, LoginInput, RegisterInput } from "./authentication.validation.js";
-import tokenGenerator from "../../utilities/tokenGenerator.js";
-import { AuthenticationRepository } from "./authentication.repository.js";
-import { email } from "zod";
-import redisClient from "../../lib/redisClient.js";
-import emailQueue from "../../jobs/queues/email/email.queue.js";
-import { fromNodeHeaders } from "better-auth/node";
+import type { ForgetInput, LoginInput, RegisterInput, ResetInput } from "./authentication.validation.js";
+import { auth } from "../../lib/auth.js";
+import type { Response } from "express";
+import { isAPIError } from "better-auth/api";
 
 
 export class AuthenticationService {
     private readonly userService: UserService = new UserService;
-    private readonly authenticationRepository: AuthenticationRepository = new AuthenticationRepository
+
+    async register(userData: RegisterInput) {
+        try {
+            const {response,headers} = await auth.api.signUpEmail({
+                returnHeaders: true,
+                body: {
+                    name: userData.name,
+                    email: userData.email,
+                    password: userData.password,
+                },
+            });
+
+            return {
+                status: true as const,
+                code: 201,
+                payload: response,
+                headers
+            };
+        } catch (e) {
+            if (isAPIError(e)) {
+                return {
+                    ...createErrorResponse({
+                        root: e.message
+                    }),
+                    code: 422,
+                };
+            }
+
+            throw e;
+        }
+    }
 
     async login(userData: LoginInput) {
-        const email = userData.email.trim().toLowerCase();
-        const user: UserModel | null = await this.userService.findUserByEmail(email);
-        if (!user) {
+        try {
+            const {response, headers} = await auth.api.signInEmail({
+                body: {
+                    email: userData.email,
+                    password: userData.password,
+                    rememberMe: true,
+                },
+
+                returnHeaders: true
+            });
+
             return {
-                ...createErrorResponse({
-                    root: "Registration could not be completed",
-                }),
-                code: 422,
-            };
+                status: true,
+                code: 200,
+                payload: response,
+                headers
+            }
+        } catch(e) {
+            if (isAPIError(e)) {
+                return {
+                    code: e.statusCode,
+                    ...createErrorResponse({
+                        root: e.message
+                    }),
+                    status: false,
+                }
+            }
+
+            throw e;
         }
-
-        const passwordMatching = await verifyPassword(userData.password,user.password);
-        if (!passwordMatching) {
-            return {
-                ...createErrorResponse({
-                    root: "Registration could not be completed",
-                }),
-                code: 422,
-            };
-        }
-
-        const accessToken = generateToken(user.id);
-
-        return {
-            status: true as const,
-            code: 200,
-            payload: {
-                user: userResource(user),
-                access_token: accessToken,
-            },
-        };
     }
 
     async checkDuplicateEmail(userData: RegisterInput) {
@@ -62,39 +83,94 @@ export class AuthenticationService {
     }
 
     async forgetPassword(forgetData: ForgetInput) {
-        const user = await this.userService.findUserByEmail(forgetData.email);
-        if (!user) {
-            return {
-                ...createErrorResponse({
-                    root: "Can't find this user"
-                }),
-                code: 422,
-            };
-        }
-
-        const passwordResestToken = await tokenGenerator();
-        await redisClient.set(`password_reset:${passwordResestToken}`,forgetData.email,{EX: 10 * 60});
-        await emailQueue.add("forget-password-email",{
-            to: user.email,
-            subject: "Forget Password",
-            data: {
-                token: "passwordResestToken"
-            }
+        const response = await auth.api.requestPasswordReset({
+            body: {
+                email: forgetData.email,
+            },
         });
 
         return {
             status: true as const,
             code: 200,
-            message: "Password reset request created",
+            message: response.message,
         };
     }
 
-    async sendVerificationEmail(userData: RegisterInput) {
-        
+    async resetPassword(resetData: ResetInput) {
+        try {
+            const response = await auth.api.resetPassword({
+                body: {
+                    newPassword: resetData.password,
+                    token: resetData.token,
+                },
+            });
+
+            return {
+                status: true as const,
+                code: 200,
+                message: "Password reset successfully",
+                payload: response,
+            };
+        } catch (error) {
+            if (isAPIError(error)) {
+                return {
+                    ...createErrorResponse({
+                        root: error.message,
+                    }),
+                    code: error.statusCode,
+                };
+            }
+
+            throw error;
+        }
     }
 
-    async refreshToken () {
+    async me(headers: Headers) {
+        const { response: session, headers: responseHeaders } = await auth.api.getSession({
+            headers,
+            returnHeaders: true,
+        });
 
+        if (!session) {
+            return {
+                ...createErrorResponse({
+                    root: "Unauthorized",
+                }),
+                code: 401,
+                headers: responseHeaders,
+            };
+        }
+
+        return {
+            status: true as const,
+            code: 200,
+            payload: session,
+            headers: responseHeaders,
+        };
+    }
+
+    async logout(headers: Headers) {
+        const { response, headers: responseHeaders } = await auth.api.signOut({
+            headers,
+            returnHeaders: true,
+        });
+
+        return {
+            status: true as const,
+            code: 200,
+            payload: response,
+            headers: responseHeaders,
+        };
+    }
+
+
+
+    applyAuthHeaders(res: Response, headers: Headers) {
+        const cookies = headers.getSetCookie();
+
+        for (const cookie of cookies) {
+            res.append("Set-Cookie", cookie);
+        }
     }
 
 }
