@@ -54,7 +54,7 @@ export class AuthenticationController {
     resetPassword = async (req: Request, res: Response) => {
         const { token, password } = req.body as ResetInput;
         const result = await this.authService.resetPassword({ token, password });
-
+        
         return res.status(result.code).json(result);
     }
 

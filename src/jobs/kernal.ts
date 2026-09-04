@@ -3,7 +3,8 @@ import redisClient from "../lib/redisClient.js";
 
 const workers = [
   workerEmail
-]
+];
+
 
 let shuttingDown = false;
 
