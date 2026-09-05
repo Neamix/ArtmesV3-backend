@@ -1,4 +1,4 @@
-import { email, z } from "zod";
+import { z } from "zod";
 
 const emailField = z
     .string({ error: "Email is required" })
@@ -55,8 +55,16 @@ export const loginSchema = z.object({
     password: loginPasswordField,
 });
 
+export const changePasswordSchema = z.object({
+    password: registerPasswordField,
+    newPassword: registerPasswordField,
+    revokeSession: z.boolean({ error: "Revoke session must be a boolean" })
+    .optional(),
+})
+ 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgetInput = z.infer<typeof forgetSchema>
 export type ResetInput = z.infer<typeof resetSchema>
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>

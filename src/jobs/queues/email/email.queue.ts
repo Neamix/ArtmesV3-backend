@@ -8,7 +8,7 @@ const emailQueue = new Queue<EmailJobPayload, void, EmailJobName>("email-queue",
         attempts: 5,
         backoff: { type: "exponential", delay: 5_000 },
         removeOnComplete: { age: 60 * 60, count: 1000 },
-        removeOnFail: { age: 7 * 24 * 60 * 60 },
+        removeOnFail: { count: 1000 },
     },
 });
 

@@ -18,9 +18,11 @@ await bootstrap();
 
 //----------------------------------- Middlewares --------------------------------------------- //
 app.use(cors({
-    origin: ['http://localhost:3000'],
+    origin: [process.env.FRONT_END as string],
     credentials: true,
 }));
+
+app.all('/api/auth/*splat', toNodeHandler(auth));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,6 +36,7 @@ app.get('/health',(req: Request,res: Response):void => {
         data: 'ping,ping,ping'
     })
 })
+
 app.use((req: Request,res: Response) => {
     res.status(404).json("No route found")
 })

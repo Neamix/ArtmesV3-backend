@@ -1,6 +1,6 @@
 import { createErrorResponse } from "../../utilities/createErrorResponse.js";
 import { UserService } from "../users/user.service.js";
-import type { ForgetInput, LoginInput, RegisterInput, ResendVerificationInput, ResetInput } from "./authentication.validation.js";
+import type { ChangePasswordInput, ForgetInput, LoginInput, RegisterInput, ResendVerificationInput, ResetInput } from "./authentication.validation.js";
 import { auth } from "../../lib/auth.js";
 import type { Response } from "express";
 import { isAPIError } from "better-auth/api";
@@ -190,9 +190,26 @@ export class AuthenticationService {
         };
     }
 
+    async changePassword(changePassowrdData: ChangePasswordInput) {
+        const { response, headers: responseHeaders } = await auth.api.changePassword({
+            body: {
+                newPassword: changePassowrdData.password,
+                currentPassword: changePassowrdData.newPassword,
+                revokeOtherSessions: changePassowrdData.revokeSession ?? false
+            },
+            
+            returnHeaders: true
+        });
 
+        return {
+            status: true as const,
+            code: 200,
+            payload: response,
+            headers: responseHeaders,
+        };
+    }
 
-    applyAuthHeaders(res: Response, headers: Headers) {
+    async applyAuthHeaders(res: Response, headers: Headers) {
         const cookies = headers.getSetCookie();
 
         for (const cookie of cookies) {

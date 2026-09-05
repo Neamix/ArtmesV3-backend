@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { AuthenticationService } from "./authentication.service.js";
-import type { ForgetInput, LoginInput, RegisterInput, ResendVerificationInput, ResetInput } from "./authentication.validation.js";
+import type { ChangePasswordInput, ForgetInput, LoginInput, RegisterInput, ResendVerificationInput, ResetInput } from "./authentication.validation.js";
 import { fromNodeHeaders } from "better-auth/node";
 
 export class AuthenticationController {
@@ -55,6 +55,13 @@ export class AuthenticationController {
         const { token, password } = req.body as ResetInput;
         const result = await this.authService.resetPassword({ token, password });
         
+        return res.status(result.code).json(result);
+    }
+
+    changePassword = async (req: Request, res: Response) => {
+        const { password, newPassword, revokeSession } = req.body as ChangePasswordInput;
+        const result = await this.authService.changePassword({ password, newPassword, revokeSession });
+
         return res.status(result.code).json(result);
     }
 

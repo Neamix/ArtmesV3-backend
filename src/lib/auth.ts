@@ -9,6 +9,12 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  // Better Auth trusts only baseURL's origin by default, so the frontend
+  // origin must be listed here or its callbackURL is rejected.
+  trustedOrigins: [process.env.FRONTEND_URL as string],
+  user: {
+    fields: { image: "avatar" },
+  },
   emailAndPassword: {    
     enabled: true,
     revokeSessionsOnPasswordReset: true,
@@ -41,6 +47,12 @@ export const auth = betterAuth({
         name: user.name,
         verifyUrl: url,
       });
+    },
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
   plugins: [
