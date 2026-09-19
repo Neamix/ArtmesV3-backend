@@ -4,14 +4,12 @@ import { prisma } from "./prisma.js";
 import { enqueueEmail } from "../jobs/queues/email/email.queue.js";
 import { bearer } from "better-auth/plugins";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-
+import { passkey } from "@better-auth/passkey"
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
-  // Better Auth trusts only baseURL's origin by default, so the frontend
-  // origin must be listed here or its callbackURL is rejected.
   trustedOrigins: [process.env.FRONTEND_URL as string],
   user: {
     fields: { image: "avatar" },
@@ -57,7 +55,8 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    bearer()
+    bearer(),
+    passkey()
   ],
   advanced: {
     database: {
