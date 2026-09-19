@@ -1,3 +1,4 @@
+import { authUser } from "@/utilities/auth.js";
 import type { WorkspaceWhereInput } from "../../generated/prisma/models.js";
 import { prisma } from "../../lib/prisma.js";
 import type { WorkspaceFilters, WorkspaceIdentity } from "./workspace.types.js";
@@ -15,6 +16,8 @@ export class WorkspaceRepository {
 
     findMany(filters: WorkspaceFilters) {
         const whereArray:WorkspaceWhereInput = {};
+
+        whereArray.user_id = Number(authUser().id)
 
         if (filters.name) {
             whereArray.name = {
@@ -34,12 +37,12 @@ export class WorkspaceRepository {
         });
     }
 
-    create(data: WorkspaceInput,user_id: number) {
+    create(data: WorkspaceInput) {
         return prisma.workspace.create({
             data: {
                 name: data.name,
                 use_for: data.use_for,
-                user_id: user_id
+                user_id: Number(authUser().id)
             }
         });
     }
@@ -48,7 +51,7 @@ export class WorkspaceRepository {
         return prisma.workspace.update({
             where: {
                 id: data.workspace_id,
-                user_id: data.user_id
+                user_id: Number(authUser().id)
             },
             data: {
                 name: data.name,

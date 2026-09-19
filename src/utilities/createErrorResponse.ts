@@ -1,7 +1,7 @@
 type ErrorValue = string | string[];
 
-export function createErrorResponse<const TErrors extends Record<string, ErrorValue>>(
-    errors: TErrors,
+export function createErrorResponse(
+    errors: Record<string, ErrorValue>,
     message?: string,
 ) {
     const firstError = Object.values(errors)[0];

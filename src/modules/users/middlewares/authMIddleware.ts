@@ -1,6 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../../../lib/auth.js";
 import type { Request, Response } from 'express';
+import { requestContext } from "@/context/requestContext.js";
 
 export async function authMiddleware(req: Request,res: Response ,next: () => void) {
     try {
@@ -13,7 +14,13 @@ export async function authMiddleware(req: Request,res: Response ,next: () => voi
         });
 
         req.user = session.user;
-        next();
+
+        requestContext.run({
+            user: req.user
+        },() => {
+            next();
+        });
+
     } catch (error) {
         throw error;
     }

@@ -16,8 +16,8 @@ export class WorkspaceService {
         return this.workspaceRepository.find({ workspace_id, user_id });
     }
 
-    public create(data: WorkspaceInput, user_id: number) {
-        return this.workspaceRepository.create(data,user_id);
+    public create(data: WorkspaceInput) {
+        return this.workspaceRepository.create(data);
     }
 
     public async update(data: WorkspaceUpdate, user_id: number) {

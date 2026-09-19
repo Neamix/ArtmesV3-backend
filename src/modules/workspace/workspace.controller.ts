@@ -33,7 +33,7 @@ export class WorkspaceController {
 
     public create = async (req: Request,res: Response) => {
         const { name, use_for } = req.body as WorkspaceInput;
-        const workspace = await this.workspaceService.create({name,use_for},this.userId(req));
+        const workspace = await this.workspaceService.create({name,use_for});
 
         return res.status(201).send(WorkspaceResource(workspace))
     }
