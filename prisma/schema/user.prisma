@@ -1,15 +1,53 @@
 model User {
-  id            Int       @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  password      String    @default("")
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  password      String   @default("")
   avatar        String?
   nationality   String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+
+  // 1-n: the workspaces this user owns
+  workspaces Workspace[]
+
+  // m-n: the workspaces this user is a member of
+  memberships Members[]
 
   @@map("users")
+}
+
+model Workspace {
+  id      String  @id @default(uuid())
+  name    String?
+  use_for String?
+  user_id Int
+  user    User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  members Members[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([user_id])
+  @@map("workspaces")
+}
+
+// Explicit join table for the m-n between User and Workspace
+model Members {
+  id           Int    @id @default(autoincrement())
+  user_id      Int
+  workspace_id String
+
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([user_id, workspace_id])
+  @@index([workspace_id])
+  @@map("members")
 }

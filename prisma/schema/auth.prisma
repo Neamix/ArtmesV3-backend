@@ -10,7 +10,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("session")
+  @@map("sessions")
 }
 
 model Account {
@@ -32,7 +32,7 @@ model Account {
 
   @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
-  @@map("account")
+  @@map("accounts")
 }
 
 model Verification {
@@ -44,5 +44,5 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
-  @@map("verification")
+  @@map("verifications")
 }

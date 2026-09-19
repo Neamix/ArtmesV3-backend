@@ -25,7 +25,6 @@ export function errorHandler(
         return;
     }
 
-    console.error("Unhandled error", error);
     res.status(500).json({
         status: false,
         message: "Internal server error",

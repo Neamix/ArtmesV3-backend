@@ -41,7 +41,6 @@ app.use((req: Request,res: Response) => {
     res.status(404).json("No route found")
 })
 
-// must come last: converts thrown errors (incl. Better Auth APIError) to JSON
 app.use(errorHandler);
 
 //----------------------------------- Database --------------------------------------------- //
@@ -51,5 +50,5 @@ try {
     process.exit(1);
 }
 
-const server = app.listen(port);
+app.listen(port);
 

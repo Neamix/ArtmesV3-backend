@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma.js";
 import { enqueueEmail } from "../jobs/queues/email/email.queue.js";
 import { bearer } from "better-auth/plugins";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 
 
 export const auth = betterAuth({
@@ -63,4 +64,21 @@ export const auth = betterAuth({
       generateId: "serial",
     },
   },
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      
+      if (ctx.path !== "/sign-in/email" && ctx.path !== "/sign-up/email") {
+        return
+      }
+
+      const email = ctx.body?.email;
+      if (typeof email !== "string" || email.endsWith("@example.com")) {
+        throw new APIError("BAD_REQUEST", {
+          message: "unsupported email provider",
+        });
+      }
+      
+    })
+  }
 })
