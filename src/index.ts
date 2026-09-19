@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth.js';
 import userRouter from './modules/users/user.routes.js';
+import workspaceRoute from './modules/workspace/workspace.routes.js';
 import bootstrap from './bootstrap.js';
 import { errorHandler } from './utilities/errorHandler.js';
 
@@ -31,6 +32,8 @@ app.use(express.static(publicDirectory));
 //----------------------------------- Modules route Registery --------------------------------------------- //
 app.use('/api/v1',authRoutes);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/workspaces', workspaceRoute);
+
 app.get('/health',(req: Request,res: Response):void => {
     res.status(200).json({
         data: 'ping,ping,ping'
